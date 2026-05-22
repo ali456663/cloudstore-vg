@@ -45,6 +45,77 @@ h1 {
   background: #2fb344;
 }
 
+.service-list {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.auth-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.auth-status,
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+  padding: 18px;
+  border: 1px solid #d8dee9;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.auth-status h2,
+.auth-form h2 {
+  margin: 0;
+  color: #1d2433;
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+.auth-status p {
+  margin: 0;
+  color: #42526b;
+  line-height: 1.5;
+}
+
+.auth-status button {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+  color: #243b63;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-form input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #b8c4d9;
+  border-radius: 6px;
+  color: #1d2433;
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.auth-form input:focus {
+  border-color: #1f6f55;
+  outline: 3px solid rgba(31, 111, 85, 0.16);
+}
+
+.auth-form button {
+  margin-top: auto;
+}
+
 .state-message,
 .error-message {
   margin: 32px 0;
@@ -144,6 +215,14 @@ button:hover {
   .topbar {
     align-items: start;
     flex-direction: column;
+  }
+
+  .service-list {
+    justify-items: start;
+  }
+
+  .auth-panel {
+    grid-template-columns: 1fr;
   }
 
   h1 {
