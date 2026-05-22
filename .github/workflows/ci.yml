@@ -37,8 +37,23 @@ jobs:
         working-directory: user-order-service
         run: ./mvnw test
 
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build product-service Docker image
-        run: docker build -t cloudstore-product-service ./product-service
+        run: docker build -t ali456663/cloudstore-product-service:latest ./product-service
 
       - name: Build user-order-service Docker image
-        run: docker build -t cloudstore-user-order-service ./user-order-service
+        run: docker build -t ali456663/cloudstore-user-order-service:latest ./user-order-service
+
+      - name: Push product-service Docker image
+        if: github.event_name == 'push'
+        run: docker push ali456663/cloudstore-product-service:latest
+
+      - name: Push user-order-service Docker image
+        if: github.event_name == 'push'
+        run: docker push ali456663/cloudstore-user-order-service:latest
