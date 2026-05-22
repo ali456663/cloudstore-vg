@@ -24,6 +24,11 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - name: Make Maven wrappers executable
+        run: |
+          chmod +x product-service/mvnw
+          chmod +x user-order-service/mvnw
+
       - name: Test product-service
         working-directory: product-service
         run: ./mvnw test
