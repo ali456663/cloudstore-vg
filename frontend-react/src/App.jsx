@@ -4,6 +4,9 @@ import './App.css'
 const PRODUCT_SERVICE_URL = 'http://localhost:8093'
 const USER_ORDER_SERVICE_URL = 'http://localhost:8094'
 
+const colorOptions = ['Black', 'White', 'Blue', 'Green']
+const sizeOptions = ['S', 'M', 'L', 'XL']
+
 const emptyRegisterForm = {
   firstName: '',
   lastName: '',
@@ -21,6 +24,10 @@ function App() {
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedColor, setSelectedColor] = useState(colorOptions[0])
+  const [selectedSize, setSelectedSize] = useState(sizeOptions[1])
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
   const [registerForm, setRegisterForm] = useState(emptyRegisterForm)
   const [loginForm, setLoginForm] = useState(emptyLoginForm)
   const [authMessage, setAuthMessage] = useState('')
@@ -29,7 +36,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [orderMessage, setOrderMessage] = useState('')
   const [orderError, setOrderError] = useState('')
-  const [buyingProductId, setBuyingProductId] = useState(null)
+  const [isBuying, setIsBuying] = useState(false)
 
   useEffect(() => {
     async function loadProducts() {
@@ -43,7 +50,7 @@ function App() {
         const data = await response.json()
         setProducts(data)
       } catch (err) {
-        setError('Kunde inte hämta produkter. Kontrollera att product-service kör på port 8093.')
+        setError('Kunde inte hamta produkter. Kontrollera att product-service kor pa port 8093.')
       } finally {
         setIsLoading(false)
       }
@@ -82,6 +89,23 @@ function App() {
     loadCurrentUser()
   }, [token])
 
+  function openProduct(product) {
+    setSelectedProduct(product)
+    setSelectedColor(colorOptions[0])
+    setSelectedSize(sizeOptions[1])
+    setIsCheckoutOpen(false)
+    setOrderMessage('')
+    setOrderError('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function closeProduct() {
+    setSelectedProduct(null)
+    setIsCheckoutOpen(false)
+    setOrderMessage('')
+    setOrderError('')
+  }
+
   function updateRegisterForm(event) {
     setRegisterForm({
       ...registerForm,
@@ -115,10 +139,10 @@ function App() {
       }
 
       const data = await response.json()
-      setAuthMessage(`Konto skapat for ${data.firstName}. Du kan logga in nu.`)
+      setAuthMessage(`Konto skapat for ${data.firstName}. Logga in for att slutföra kopet.`)
       setRegisterForm(emptyRegisterForm)
     } catch (err) {
-      setAuthError('Registrering misslyckades. Testa annan e-post eller kontrollera fälten.')
+      setAuthError('Registrering misslyckades. Testa annan e-post eller kontrollera falten.')
     }
   }
 
@@ -144,9 +168,9 @@ function App() {
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
       setLoginForm(emptyLoginForm)
-      setAuthMessage('Du är inloggad.')
+      setAuthMessage('Du ar inloggad. Nu kan du slutföra kopet.')
     } catch (err) {
-      setAuthError('Inloggning misslyckades. Kontrollera e-post och lösenord.')
+      setAuthError('Inloggning misslyckades. Kontrollera e-post och losenord.')
     }
   }
 
@@ -154,19 +178,23 @@ function App() {
     localStorage.removeItem('cloudstoreToken')
     setToken('')
     setCurrentUser(null)
-    setAuthMessage('Du är utloggad.')
+    setAuthMessage('Du ar utloggad.')
   }
 
-  async function buyProduct(product) {
+  async function buySelectedProduct() {
     setOrderMessage('')
     setOrderError('')
 
-    if (!token || !currentUser) {
-      setOrderError('Du behöver registrera dig eller logga in innan du kan köpa produkten.')
+    if (!selectedProduct) {
       return
     }
 
-    setBuyingProductId(product.id)
+    if (!token || !currentUser) {
+      setOrderError('Logga in eller registrera dig i kassan for att slutföra kopet.')
+      return
+    }
+
+    setIsBuying(true)
 
     try {
       const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/orders`, {
@@ -178,7 +206,10 @@ function App() {
         body: JSON.stringify({
           items: [
             {
-              productId: product.id,
+              productId: selectedProduct.id,
+              productTitle: selectedProduct.title,
+              selectedColor,
+              selectedSize,
               quantity: 1,
             },
           ],
@@ -190,11 +221,11 @@ function App() {
       }
 
       const data = await response.json()
-      setOrderMessage(`Beställning #${data.id} skapad. Ägaren får mejl via Google Script.`)
+      setOrderMessage(`Bestallning #${data.id} skapad. Saljaren far mejl pa ali.wafa17943@gmail.com via Google Apps Script.`)
     } catch (err) {
-      setOrderError('Köpet misslyckades. Kontrollera att user-order-service kör på port 8094.')
+      setOrderError('Kopet misslyckades. Kontrollera att user-order-service kor pa port 8094.')
     } finally {
-      setBuyingProductId(null)
+      setIsBuying(false)
     }
   }
 
@@ -205,84 +236,125 @@ function App() {
           <p className="eyebrow">CloudStore</p>
           <h1>Produkter</h1>
         </div>
-        <div className="service-list">
-          <div className="service-status">
-            <span></span>
-            product-service: 8093
+        {currentUser && (
+          <div className="account-chip">
+            <span>{currentUser.firstName} {currentUser.lastName}</span>
+            <button type="button" onClick={logout}>Logga ut</button>
           </div>
-          <div className="service-status">
-            <span></span>
-            user-order-service: 8094
-          </div>
-        </div>
+        )}
       </header>
-
-      <section className="auth-panel" aria-label="Autentisering">
-        <div className="auth-status">
-          <p className="eyebrow">Konto</p>
-          {currentUser ? (
-            <>
-              <h2>Inloggad som {currentUser.firstName} {currentUser.lastName}</h2>
-              <p>{currentUser.email}</p>
-              <p>{currentUser.phoneNumber}</p>
-              <button type="button" onClick={logout}>Logga ut</button>
-            </>
-          ) : (
-            <>
-              <h2>Inte inloggad</h2>
-              <p>Registrera dig en gång. Nästa gång loggar du in med Gmail och lösenord.</p>
-            </>
-          )}
-        </div>
-
-        <form className="auth-form" onSubmit={register}>
-          <h2>Registrera</h2>
-          <label>
-            Namn
-            <input name="firstName" value={registerForm.firstName} onChange={updateRegisterForm} required minLength={2} />
-          </label>
-          <label>
-            Efternamn
-            <input name="lastName" value={registerForm.lastName} onChange={updateRegisterForm} required minLength={2} />
-          </label>
-          <label>
-            Gmail / e-post
-            <input name="email" type="email" value={registerForm.email} onChange={updateRegisterForm} required />
-          </label>
-          <label>
-            Telefonnummer
-            <input name="phoneNumber" type="tel" value={registerForm.phoneNumber} onChange={updateRegisterForm} required minLength={7} />
-          </label>
-          <label>
-            Lösenord
-            <input name="password" type="password" value={registerForm.password} onChange={updateRegisterForm} required minLength={8} />
-          </label>
-          <button type="submit">Skapa konto</button>
-        </form>
-
-        <form className="auth-form" onSubmit={login}>
-          <h2>Logga in</h2>
-          <label>
-            Gmail / e-post
-            <input name="email" type="email" value={loginForm.email} onChange={updateLoginForm} required />
-          </label>
-          <label>
-            Lösenord
-            <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
-          </label>
-          <button type="submit">Logga in</button>
-        </form>
-      </section>
 
       {authMessage && <p className="state-message">{authMessage}</p>}
       {authError && <p className="error-message">{authError}</p>}
       {orderMessage && <p className="state-message">{orderMessage}</p>}
       {orderError && <p className="error-message">{orderError}</p>}
 
-      {isLoading && <p className="state-message">Hämtar produkter...</p>}
+      {selectedProduct && (
+        <section className="product-detail" aria-label="Produktdetaljer">
+          <button className="text-button" type="button" onClick={closeProduct}>Tillbaka till produkter</button>
+          <div className="detail-layout">
+            <div className="detail-image">
+              <img src={selectedProduct.image} alt={selectedProduct.title} />
+            </div>
+            <div className="detail-info">
+              <p className="category">{selectedProduct.category}</p>
+              <h2>{selectedProduct.title}</h2>
+              <p className="description">{selectedProduct.description}</p>
+              <strong className="detail-price">${selectedProduct.price}</strong>
+
+              <div className="option-group">
+                <label htmlFor="color">Farg</label>
+                <select id="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)}>
+                  {colorOptions.map((color) => (
+                    <option key={color} value={color}>{color}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="option-group">
+                <label htmlFor="size">Storlek</label>
+                <select id="size" value={selectedSize} onChange={(event) => setSelectedSize(event.target.value)}>
+                  {sizeOptions.map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button type="button" onClick={() => setIsCheckoutOpen(true)}>Ga till kassa</button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {selectedProduct && isCheckoutOpen && (
+        <section className="checkout-panel" aria-label="Kassa">
+          <div className="checkout-summary">
+            <p className="eyebrow">Kassa</p>
+            <h2>Slutfor kop</h2>
+            <p>{selectedProduct.title}</p>
+            <p>Farg: {selectedColor}</p>
+            <p>Storlek: {selectedSize}</p>
+            <strong>${selectedProduct.price}</strong>
+          </div>
+
+          {currentUser ? (
+            <div className="checkout-auth">
+              <h2>Kund</h2>
+              <p>{currentUser.firstName} {currentUser.lastName}</p>
+              <p>{currentUser.email}</p>
+              <p>{currentUser.phoneNumber}</p>
+              <button type="button" onClick={buySelectedProduct} disabled={isBuying}>
+                {isBuying ? 'Skapar order...' : 'Bekrafta kop'}
+              </button>
+            </div>
+          ) : (
+            <div className="auth-panel checkout-auth-panel">
+              <form className="auth-form" onSubmit={register}>
+                <h2>Registrera kund</h2>
+                <label>
+                  Namn
+                  <input name="firstName" value={registerForm.firstName} onChange={updateRegisterForm} required minLength={2} />
+                </label>
+                <label>
+                  Efternamn
+                  <input name="lastName" value={registerForm.lastName} onChange={updateRegisterForm} required minLength={2} />
+                </label>
+                <label>
+                  Gmail / e-post
+                  <input name="email" type="email" value={registerForm.email} onChange={updateRegisterForm} required />
+                </label>
+                <label>
+                  Telefonnummer
+                  <input name="phoneNumber" type="tel" value={registerForm.phoneNumber} onChange={updateRegisterForm} required minLength={7} />
+                </label>
+                <label>
+                  Losenord
+                  <input name="password" type="password" value={registerForm.password} onChange={updateRegisterForm} required minLength={8} />
+                </label>
+                <button type="submit">Skapa konto</button>
+              </form>
+
+              <form className="auth-form" onSubmit={login}>
+                <h2>Logga in</h2>
+                <label>
+                  Gmail / e-post
+                  <input name="email" type="email" value={loginForm.email} onChange={updateLoginForm} required />
+                </label>
+                <label>
+                  Losenord
+                  <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
+                </label>
+                <button type="submit">Logga in</button>
+              </form>
+            </div>
+          )}
+        </section>
+      )}
+
+      {isLoading && <p className="state-message">Hamtar produkter...</p>}
       {error && <p className="error-message">{error}</p>}
 
-      {!isLoading && !error && (
+      {!isLoading && !error && !selectedProduct && (
         <section className="product-grid" aria-label="Produktlista">
           {products.map((product) => (
             <article className="product-card" key={product.id}>
@@ -294,9 +366,7 @@ function App() {
                 <h2>{product.title}</h2>
                 <div className="card-footer">
                   <strong>${product.price}</strong>
-                  <button type="button" onClick={() => buyProduct(product)} disabled={buyingProductId === product.id}>
-                    {buyingProductId === product.id ? 'Köper...' : 'Köp'}
-                  </button>
+                  <button type="button" onClick={() => openProduct(product)}>Visa detaljer</button>
                 </div>
               </div>
             </article>

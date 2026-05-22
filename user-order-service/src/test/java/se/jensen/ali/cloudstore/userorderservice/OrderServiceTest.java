@@ -56,8 +56,8 @@ class OrderServiceTest {
         when(productClient.productExists(1L)).thenReturn(true);
         when(productClient.productExists(9L)).thenReturn(true);
         CreateOrderRequest request = new CreateOrderRequest(List.of(
-                new CreateOrderItemRequest(1L, 2),
-                new CreateOrderItemRequest(9L, 1)
+                new CreateOrderItemRequest(1L, "Test jacket", "Black", "M", 2),
+                new CreateOrderItemRequest(9L, "Test shoes", "White", "42", 1)
         ));
 
         OrderResponse response = orderService.createOrder("ali@test.com", request);
@@ -68,6 +68,9 @@ class OrderServiceTest {
         assertThat(response.customerEmail()).isEqualTo("ali@test.com");
         assertThat(response.items()).hasSize(2);
         assertThat(response.items().getFirst().productId()).isEqualTo(1L);
+        assertThat(response.items().getFirst().productTitle()).isEqualTo("Test jacket");
+        assertThat(response.items().getFirst().selectedColor()).isEqualTo("Black");
+        assertThat(response.items().getFirst().selectedSize()).isEqualTo("M");
         assertThat(response.items().getFirst().quantity()).isEqualTo(2);
         assertThat(customerOrderRepository.count()).isEqualTo(1);
         verify(orderNotificationClient).sendOrderEmail(org.mockito.ArgumentMatchers.any(CustomerOrder.class));

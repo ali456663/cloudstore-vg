@@ -13,10 +13,15 @@ import java.util.List;
 public class OrderNotificationClient {
 
     private final String googleScriptUrl;
+    private final String sellerEmail;
     private final RestClient restClient;
 
-    public OrderNotificationClient(@Value("${notification.google-script-url:}") String googleScriptUrl) {
+    public OrderNotificationClient(
+            @Value("${notification.google-script-url:}") String googleScriptUrl,
+            @Value("${notification.seller-email:ali.wafa17943@gmail.com}") String sellerEmail
+    ) {
         this.googleScriptUrl = googleScriptUrl;
+        this.sellerEmail = sellerEmail;
         this.restClient = RestClient.create();
     }
 
@@ -27,6 +32,7 @@ public class OrderNotificationClient {
 
         AppUser user = order.getUser();
         OrderEmailRequest request = new OrderEmailRequest(
+                sellerEmail,
                 order.getId(),
                 user.getFullName(),
                 user.getEmail(),
@@ -42,6 +48,7 @@ public class OrderNotificationClient {
     }
 
     private record OrderEmailRequest(
+            String sellerEmail,
             Long orderId,
             String customerName,
             String customerEmail,
@@ -50,9 +57,21 @@ public class OrderNotificationClient {
     ) {
     }
 
-    private record OrderEmailItem(Long productId, Integer quantity) {
+    private record OrderEmailItem(
+            Long productId,
+            String productTitle,
+            String selectedColor,
+            String selectedSize,
+            Integer quantity
+    ) {
         private static OrderEmailItem from(OrderItem item) {
-            return new OrderEmailItem(item.getProductId(), item.getQuantity());
+            return new OrderEmailItem(
+                    item.getProductId(),
+                    item.getProductTitle(),
+                    item.getSelectedColor(),
+                    item.getSelectedSize(),
+                    item.getQuantity()
+            );
         }
     }
 }

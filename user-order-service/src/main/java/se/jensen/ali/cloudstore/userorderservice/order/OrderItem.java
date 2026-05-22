@@ -19,6 +19,12 @@ public class OrderItem {
 
     private Long productId;
 
+    private String productTitle;
+
+    private String selectedColor;
+
+    private String selectedSize;
+
     private Integer quantity;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -28,8 +34,11 @@ public class OrderItem {
     protected OrderItem() {
     }
 
-    public OrderItem(Long productId, Integer quantity) {
+    public OrderItem(Long productId, String productTitle, String selectedColor, String selectedSize, Integer quantity) {
         this.productId = productId;
+        this.productTitle = productTitle;
+        this.selectedColor = selectedColor;
+        this.selectedSize = selectedSize;
         this.quantity = quantity;
     }
 
@@ -43,6 +52,18 @@ public class OrderItem {
 
     public Long getProductId() {
         return productId;
+    }
+
+    public String getProductTitle() {
+        return productTitle;
+    }
+
+    public String getSelectedColor() {
+        return selectedColor;
+    }
+
+    public String getSelectedSize() {
+        return selectedSize;
     }
 
     public Integer getQuantity() {

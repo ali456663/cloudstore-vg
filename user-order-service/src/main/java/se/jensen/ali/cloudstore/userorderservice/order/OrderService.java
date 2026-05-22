@@ -37,7 +37,13 @@ public class OrderService {
                 throw new IllegalArgumentException("Product does not exist: " + itemRequest.productId());
             }
 
-            order.addItem(new OrderItem(itemRequest.productId(), itemRequest.quantity()));
+            order.addItem(new OrderItem(
+                    itemRequest.productId(),
+                    itemRequest.productTitle(),
+                    itemRequest.selectedColor(),
+                    itemRequest.selectedSize(),
+                    itemRequest.quantity()
+            ));
         }
 
         CustomerOrder savedOrder = customerOrderRepository.save(order);
