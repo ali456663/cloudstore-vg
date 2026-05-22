@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: cloudstore-mysql
+    environment:
+      MYSQL_DATABASE: cloudstore
+      MYSQL_USER: cloudstore
+      MYSQL_PASSWORD: cloudstore
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  product-service:
+    build:
+      context: ./product-service
+    container_name: cloudstore-product-service
+    environment:
+      SERVICE_JWT_SECRET: cloudstore-service-secret-key
+    ports:
+      - "8093:8093"
+
+  user-order-service:
+    build:
+      context: ./user-order-service
+    container_name: cloudstore-user-order-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/cloudstore
+      DB_USERNAME: cloudstore
+      DB_PASSWORD: cloudstore
+      PRODUCT_SERVICE_BASE_URL: http://product-service:8093
+      SERVICE_JWT_SECRET: cloudstore-service-secret-key
+      JWT_SECRET: cloudstore-development-secret-key
+    ports:
+      - "8094:8094"
+
+volumes:
+  mysql-data:
