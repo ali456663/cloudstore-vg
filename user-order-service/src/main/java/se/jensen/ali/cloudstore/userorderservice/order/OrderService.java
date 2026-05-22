@@ -1,6 +1,7 @@
 package se.jensen.ali.cloudstore.userorderservice.order;
 
 import org.springframework.stereotype.Service;
+import se.jensen.ali.cloudstore.userorderservice.notification.OrderNotificationClient;
 import se.jensen.ali.cloudstore.userorderservice.product.ProductClient;
 import se.jensen.ali.cloudstore.userorderservice.user.AppUser;
 import se.jensen.ali.cloudstore.userorderservice.user.AppUserRepository;
@@ -11,19 +12,22 @@ public class OrderService {
     private final AppUserRepository appUserRepository;
     private final CustomerOrderRepository customerOrderRepository;
     private final ProductClient productClient;
+    private final OrderNotificationClient orderNotificationClient;
 
     public OrderService(
             AppUserRepository appUserRepository,
             CustomerOrderRepository customerOrderRepository,
-            ProductClient productClient
+            ProductClient productClient,
+            OrderNotificationClient orderNotificationClient
     ) {
         this.appUserRepository = appUserRepository;
         this.customerOrderRepository = customerOrderRepository;
         this.productClient = productClient;
+        this.orderNotificationClient = orderNotificationClient;
     }
 
-    public OrderResponse createOrder(String username, CreateOrderRequest request) {
-        AppUser user = appUserRepository.findByUsername(username)
+    public OrderResponse createOrder(String email, CreateOrderRequest request) {
+        AppUser user = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         CustomerOrder order = new CustomerOrder(user);
@@ -37,6 +41,7 @@ public class OrderService {
         }
 
         CustomerOrder savedOrder = customerOrderRepository.save(order);
+        orderNotificationClient.sendOrderEmail(savedOrder);
         return OrderResponse.from(savedOrder);
     }
 }

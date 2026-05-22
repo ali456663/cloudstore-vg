@@ -22,14 +22,26 @@ public class AppUser {
     private String email;
 
     @Column(nullable = false)
+    private String firstName;
+
+    @Column(nullable = false)
+    private String lastName;
+
+    @Column(nullable = false)
+    private String phoneNumber;
+
+    @Column(nullable = false)
     private String password;
 
     protected AppUser() {
     }
 
-    public AppUser(String username, String email, String password) {
+    public AppUser(String username, String email, String firstName, String lastName, String phoneNumber, String password) {
         this.username = username;
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.phoneNumber = phoneNumber;
         this.password = password;
     }
 
@@ -43,6 +55,22 @@ public class AppUser {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 
     public String getPassword() {

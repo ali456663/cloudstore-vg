@@ -27,7 +27,7 @@ public class JwtService {
         long expiresAt = Instant.now().plusSeconds(60 * 60 * 24).getEpochSecond();
         String payload = """
                 {"sub":"%s","userId":%d,"email":"%s","exp":%d}
-                """.formatted(user.getUsername(), user.getId(), user.getEmail(), expiresAt).trim();
+                """.formatted(user.getEmail(), user.getId(), user.getEmail(), expiresAt).trim();
 
         String encodedHeader = encode(header);
         String encodedPayload = encode(payload);

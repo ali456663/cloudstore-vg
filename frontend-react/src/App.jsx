@@ -5,13 +5,15 @@ const PRODUCT_SERVICE_URL = 'http://localhost:8093'
 const USER_ORDER_SERVICE_URL = 'http://localhost:8094'
 
 const emptyRegisterForm = {
-  username: '',
+  firstName: '',
+  lastName: '',
   email: '',
+  phoneNumber: '',
   password: '',
 }
 
 const emptyLoginForm = {
-  username: '',
+  email: '',
   password: '',
 }
 
@@ -25,6 +27,9 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [token, setToken] = useState(() => localStorage.getItem('cloudstoreToken') || '')
   const [currentUser, setCurrentUser] = useState(null)
+  const [orderMessage, setOrderMessage] = useState('')
+  const [orderError, setOrderError] = useState('')
+  const [buyingProductId, setBuyingProductId] = useState(null)
 
   useEffect(() => {
     async function loadProducts() {
@@ -38,7 +43,7 @@ function App() {
         const data = await response.json()
         setProducts(data)
       } catch (err) {
-        setError('Kunde inte hamta produkter. Kontrollera att product-service kor pa port 8093.')
+        setError('Kunde inte hämta produkter. Kontrollera att product-service kör på port 8093.')
       } finally {
         setIsLoading(false)
       }
@@ -110,10 +115,10 @@ function App() {
       }
 
       const data = await response.json()
-      setAuthMessage(`Konto skapat for ${data.username}. Du kan logga in nu.`)
+      setAuthMessage(`Konto skapat for ${data.firstName}. Du kan logga in nu.`)
       setRegisterForm(emptyRegisterForm)
     } catch (err) {
-      setAuthError('Registrering misslyckades. Testa annat anvandarnamn eller e-post.')
+      setAuthError('Registrering misslyckades. Testa annan e-post eller kontrollera fälten.')
     }
   }
 
@@ -139,9 +144,9 @@ function App() {
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
       setLoginForm(emptyLoginForm)
-      setAuthMessage('Du ar inloggad.')
+      setAuthMessage('Du är inloggad.')
     } catch (err) {
-      setAuthError('Inloggning misslyckades. Kontrollera anvandarnamn och losenord.')
+      setAuthError('Inloggning misslyckades. Kontrollera e-post och lösenord.')
     }
   }
 
@@ -149,7 +154,48 @@ function App() {
     localStorage.removeItem('cloudstoreToken')
     setToken('')
     setCurrentUser(null)
-    setAuthMessage('Du ar utloggad.')
+    setAuthMessage('Du är utloggad.')
+  }
+
+  async function buyProduct(product) {
+    setOrderMessage('')
+    setOrderError('')
+
+    if (!token || !currentUser) {
+      setOrderError('Du behöver registrera dig eller logga in innan du kan köpa produkten.')
+      return
+    }
+
+    setBuyingProductId(product.id)
+
+    try {
+      const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/orders`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [
+            {
+              productId: product.id,
+              quantity: 1,
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Could not create order')
+      }
+
+      const data = await response.json()
+      setOrderMessage(`Beställning #${data.id} skapad. Ägaren får mejl via Google Script.`)
+    } catch (err) {
+      setOrderError('Köpet misslyckades. Kontrollera att user-order-service kör på port 8094.')
+    } finally {
+      setBuyingProductId(null)
+    }
   }
 
   return (
@@ -176,14 +222,15 @@ function App() {
           <p className="eyebrow">Konto</p>
           {currentUser ? (
             <>
-              <h2>Inloggad som {currentUser.username}</h2>
+              <h2>Inloggad som {currentUser.firstName} {currentUser.lastName}</h2>
               <p>{currentUser.email}</p>
+              <p>{currentUser.phoneNumber}</p>
               <button type="button" onClick={logout}>Logga ut</button>
             </>
           ) : (
             <>
               <h2>Inte inloggad</h2>
-              <p>Registrera ett konto eller logga in for att skapa bestallningar.</p>
+              <p>Registrera dig en gång. Nästa gång loggar du in med Gmail och lösenord.</p>
             </>
           )}
         </div>
@@ -191,15 +238,23 @@ function App() {
         <form className="auth-form" onSubmit={register}>
           <h2>Registrera</h2>
           <label>
-            Anvandarnamn
-            <input name="username" value={registerForm.username} onChange={updateRegisterForm} required minLength={3} />
+            Namn
+            <input name="firstName" value={registerForm.firstName} onChange={updateRegisterForm} required minLength={2} />
           </label>
           <label>
-            E-post
+            Efternamn
+            <input name="lastName" value={registerForm.lastName} onChange={updateRegisterForm} required minLength={2} />
+          </label>
+          <label>
+            Gmail / e-post
             <input name="email" type="email" value={registerForm.email} onChange={updateRegisterForm} required />
           </label>
           <label>
-            Losenord
+            Telefonnummer
+            <input name="phoneNumber" type="tel" value={registerForm.phoneNumber} onChange={updateRegisterForm} required minLength={7} />
+          </label>
+          <label>
+            Lösenord
             <input name="password" type="password" value={registerForm.password} onChange={updateRegisterForm} required minLength={8} />
           </label>
           <button type="submit">Skapa konto</button>
@@ -208,11 +263,11 @@ function App() {
         <form className="auth-form" onSubmit={login}>
           <h2>Logga in</h2>
           <label>
-            Anvandarnamn
-            <input name="username" value={loginForm.username} onChange={updateLoginForm} required />
+            Gmail / e-post
+            <input name="email" type="email" value={loginForm.email} onChange={updateLoginForm} required />
           </label>
           <label>
-            Losenord
+            Lösenord
             <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
           </label>
           <button type="submit">Logga in</button>
@@ -221,8 +276,10 @@ function App() {
 
       {authMessage && <p className="state-message">{authMessage}</p>}
       {authError && <p className="error-message">{authError}</p>}
+      {orderMessage && <p className="state-message">{orderMessage}</p>}
+      {orderError && <p className="error-message">{orderError}</p>}
 
-      {isLoading && <p className="state-message">Hamtar produkter...</p>}
+      {isLoading && <p className="state-message">Hämtar produkter...</p>}
       {error && <p className="error-message">{error}</p>}
 
       {!isLoading && !error && (
@@ -237,7 +294,9 @@ function App() {
                 <h2>{product.title}</h2>
                 <div className="card-footer">
                   <strong>${product.price}</strong>
-                  <button type="button">Lagg till</button>
+                  <button type="button" onClick={() => buyProduct(product)} disabled={buyingProductId === product.id}>
+                    {buyingProductId === product.id ? 'Köper...' : 'Köp'}
+                  </button>
                 </div>
               </div>
             </article>

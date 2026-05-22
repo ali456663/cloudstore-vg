@@ -21,17 +21,16 @@ public class AuthService {
     }
 
     public UserResponse register(RegisterRequest request) {
-        if (appUserRepository.existsByUsername(request.username())) {
-            throw new IllegalArgumentException("Username is already taken");
-        }
-
         if (appUserRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email is already taken");
         }
 
         AppUser user = new AppUser(
-                request.username(),
                 request.email(),
+                request.email(),
+                request.firstName(),
+                request.lastName(),
+                request.phoneNumber(),
                 passwordEncoder.encode(request.password())
         );
 
@@ -40,18 +39,18 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        AppUser user = appUserRepository.findByUsername(request.username())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
+        AppUser user = appUserRepository.findByEmail(request.email())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid username or password");
+            throw new IllegalArgumentException("Invalid email or password");
         }
 
         return new LoginResponse(jwtService.generateToken(user));
     }
 
-    public UserResponse getCurrentUser(String username) {
-        AppUser user = appUserRepository.findByUsername(username)
+    public UserResponse getCurrentUser(String email) {
+        AppUser user = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         return UserResponse.from(user);
