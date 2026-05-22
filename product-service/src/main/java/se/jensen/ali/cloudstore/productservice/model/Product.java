@@ -1,4 +1,4 @@
-package se.jensen.ali.cloudstore.productservice;
+package se.jensen.ali.cloudstore.productservice.model;
 
 import java.math.BigDecimal;
 

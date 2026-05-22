@@ -1,7 +1,8 @@
-package se.jensen.ali.cloudstore.productservice;
+package se.jensen.ali.cloudstore.productservice.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import se.jensen.ali.cloudstore.productservice.model.Product;
 
 import java.util.Arrays;
 import java.util.List;

@@ -6,6 +6,10 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import se.jensen.ali.cloudstore.productservice.controller.ProductController;
+import se.jensen.ali.cloudstore.productservice.model.Product;
+import se.jensen.ali.cloudstore.productservice.security.ServiceJwtService;
+import se.jensen.ali.cloudstore.productservice.service.ProductService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,6 +30,9 @@ class ProductControllerTest {
 
     @MockitoBean
     private ProductService productService;
+
+    @MockitoBean
+    private ServiceJwtService serviceJwtService;
 
     @Test
     void healthReturnsMessage() throws Exception {
