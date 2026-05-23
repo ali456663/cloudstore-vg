@@ -189,8 +189,10 @@ function App() {
       setToken(data.token)
       await loadCurrentUser(data.token, false)
       setLoginForm(emptyLoginForm)
-      setAuthMessage('Du ar inloggad. Vi skapar ordern nu.')
-      await buySelectedProduct(data.token)
+      setAuthMessage('Du ar inloggad. Tryck pa Slutfor kop vid produkten.')
+      setTimeout(() => {
+        document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 0)
     } catch (err) {
       setAuthError('Inloggning misslyckades. Kontrollera e-post och losenord.')
     }
@@ -243,7 +245,7 @@ function App() {
       }
 
       const data = await response.json()
-      setOrderMessage(`Bestallning #${data.id} skapad. Saljaren far mejl pa ali.wafa17943@gmail.com via Google Apps Script.`)
+      setOrderMessage(`Din produkt har registrerats. Bestallning #${data.id} ar skapad och saljaren far mejl.`)
     } catch (err) {
       setOrderError('Kopet misslyckades. Kontrollera att user-order-service kor pa port 8094.')
     } finally {
@@ -317,6 +319,16 @@ function App() {
             <p>Farg: {selectedColor}</p>
             <p>Storlek: {selectedSize}</p>
             <strong>${selectedProduct.price}</strong>
+            {currentUser ? (
+              <>
+                <p className="checkout-help">Du ar inloggad. Tryck pa knappen nedan for att registrera produkten.</p>
+                <button type="button" onClick={() => buySelectedProduct()} disabled={isBuying}>
+                  {isBuying ? 'Registrerar...' : 'Slutfor kop'}
+                </button>
+              </>
+            ) : (
+              <p className="checkout-help">Logga in eller registrera dig for att kunna slutfora kopet.</p>
+            )}
           </div>
 
           {currentUser ? (
@@ -325,10 +337,6 @@ function App() {
               <p>{currentUser.firstName} {currentUser.lastName}</p>
               <p>{currentUser.email}</p>
               <p>{currentUser.phoneNumber}</p>
-              <p className="checkout-help">Du ar inloggad. Tryck pa knappen nedan for att skapa ordern och skicka mejlet.</p>
-              <button type="button" onClick={() => buySelectedProduct()} disabled={isBuying}>
-                {isBuying ? 'Skapar order...' : 'Slutfor kop och skicka order'}
-              </button>
             </div>
           ) : (
             <div className="checkout-auth">
@@ -371,9 +379,7 @@ function App() {
                     Losenord
                     <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
                   </label>
-                  <button type="submit" disabled={isBuying}>
-                    {isBuying ? 'Skapar order...' : 'Logga in och slutfor kop'}
-                  </button>
+                  <button type="submit">Logga in</button>
                   <button className="secondary-button" type="button" onClick={() => setAuthMode('register')}>
                     Ny kund - registrera dig
                   </button>
