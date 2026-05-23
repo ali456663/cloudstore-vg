@@ -205,15 +205,16 @@ function App() {
     setAuthMessage('Du ar utloggad.')
   }
 
-  async function buySelectedProduct(authToken = token) {
+  async function buySelectedProduct(authToken) {
     setOrderMessage('')
     setOrderError('')
+    const activeToken = authToken || token || localStorage.getItem('cloudstoreToken') || ''
 
     if (!selectedProduct) {
       return
     }
 
-    if (!authToken) {
+    if (!activeToken) {
       setAuthMode('login')
       setOrderError('Logga in eller registrera dig i kassan for att slutfora kopet.')
       return
@@ -225,7 +226,7 @@ function App() {
       const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/orders`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${authToken}`,
+          Authorization: `Bearer ${activeToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
