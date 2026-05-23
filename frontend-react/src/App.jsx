@@ -60,7 +60,7 @@ function App() {
     loadProducts()
   }, [])
 
-  async function loadCurrentUser(authToken, shouldClearToken = true) {
+  async function loadCurrentUser(authToken) {
     if (!authToken) {
       setCurrentUser(null)
       return null
@@ -81,12 +81,6 @@ function App() {
       setCurrentUser(data)
       return data
     } catch (err) {
-      if (shouldClearToken) {
-        localStorage.removeItem('cloudstoreToken')
-        setToken('')
-        setAuthMessage('')
-      }
-      setCurrentUser(null)
       return null
     }
   }
@@ -186,9 +180,16 @@ function App() {
       }
 
       const data = await response.json()
+      const loginEmail = loginForm.email
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
-      loadCurrentUser(data.token, false)
+      setCurrentUser({
+        firstName: 'Inloggad',
+        lastName: 'kund',
+        email: loginEmail,
+        phoneNumber: '',
+      })
+      loadCurrentUser(data.token)
       setLoginForm(emptyLoginForm)
       setAuthMessage('Du ar inloggad. Tryck pa Slutfor kop vid produkten.')
       setTimeout(() => {
