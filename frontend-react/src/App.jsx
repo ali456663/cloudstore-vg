@@ -214,6 +214,7 @@ function App() {
     }
 
     if (!authToken) {
+      setAuthMode('login')
       setOrderError('Logga in eller registrera dig i kassan for att slutfora kopet.')
       return
     }
@@ -319,16 +320,14 @@ function App() {
             <p>Farg: {selectedColor}</p>
             <p>Storlek: {selectedSize}</p>
             <strong>${selectedProduct.price}</strong>
-            {currentUser ? (
-              <>
-                <p className="checkout-help">Du ar inloggad. Tryck pa knappen nedan for att registrera produkten.</p>
-                <button type="button" onClick={() => buySelectedProduct()} disabled={isBuying}>
-                  {isBuying ? 'Registrerar...' : 'Slutfor kop'}
-                </button>
-              </>
-            ) : (
-              <p className="checkout-help">Logga in eller registrera dig for att kunna slutfora kopet.</p>
-            )}
+            <p className="checkout-help">
+              {currentUser
+                ? 'Du ar inloggad. Tryck pa knappen nedan for att registrera produkten.'
+                : 'Logga in eller registrera dig, tryck sedan pa Slutfor kop.'}
+            </p>
+            <button type="button" onClick={() => buySelectedProduct()} disabled={isBuying}>
+              {isBuying ? 'Registrerar...' : 'Slutfor kop'}
+            </button>
           </div>
 
           {currentUser ? (
