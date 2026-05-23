@@ -3,6 +3,7 @@ package se.jensen.ali.cloudstore.userorderservice.notification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import se.jensen.ali.cloudstore.userorderservice.order.CustomerOrder;
 import se.jensen.ali.cloudstore.userorderservice.order.OrderItem;
 import se.jensen.ali.cloudstore.userorderservice.user.AppUser;
@@ -40,11 +41,15 @@ public class OrderNotificationClient {
                 order.getItems().stream().map(OrderEmailItem::from).toList()
         );
 
-        restClient.post()
-                .uri(googleScriptUrl)
-                .body(request)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.post()
+                    .uri(googleScriptUrl)
+                    .body(request)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientException exception) {
+            System.out.println("Could not send order email: " + exception.getMessage());
+        }
     }
 
     private record OrderEmailRequest(

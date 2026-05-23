@@ -259,12 +259,12 @@ function App() {
       }
 
       const data = await response.json()
-      setOrderMessage(`Din produkt har registrerats. Bestallning #${data.id} ar skapad och saljaren far mejl.`)
+      setOrderMessage(`Din produkt har registrerats. Bestallning #${data.id} ar skapad.`)
     } catch (err) {
       if (err.message === 'login-required') {
         setOrderError('Din inloggning gick ut. Logga in igen och tryck sedan pa Slutfor kop.')
       } else {
-        setOrderError('Kopet misslyckades. Kontrollera att user-order-service kor pa port 8094.')
+        setOrderError('Ordern kunde inte skapas. Kontrollera att user-order-service kor pa port 8094.')
       }
     } finally {
       setIsBuying(false)
