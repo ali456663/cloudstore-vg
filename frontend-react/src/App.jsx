@@ -60,34 +60,38 @@ function App() {
     loadProducts()
   }, [])
 
-  useEffect(() => {
-    async function loadCurrentUser() {
-      if (!token) {
-        setCurrentUser(null)
-        return
-      }
-
-      try {
-        const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error('Could not load current user')
-        }
-
-        const data = await response.json()
-        setCurrentUser(data)
-      } catch (err) {
-        localStorage.removeItem('cloudstoreToken')
-        setToken('')
-        setCurrentUser(null)
-      }
+  async function loadCurrentUser(authToken, shouldClearToken = true) {
+    if (!authToken) {
+      setCurrentUser(null)
+      return null
     }
 
-    loadCurrentUser()
+    try {
+      const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Could not load current user')
+      }
+
+      const data = await response.json()
+      setCurrentUser(data)
+      return data
+    } catch (err) {
+      if (shouldClearToken) {
+        localStorage.removeItem('cloudstoreToken')
+        setToken('')
+      }
+      setCurrentUser(null)
+      return null
+    }
+  }
+
+  useEffect(() => {
+    loadCurrentUser(token)
   }, [token])
 
   function openProduct(product) {
@@ -183,8 +187,12 @@ function App() {
       const data = await response.json()
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
+      const user = await loadCurrentUser(data.token, false)
       setLoginForm(emptyLoginForm)
-      setAuthMessage('Du ar inloggad. Nu kan du slutfora kopet.')
+      setAuthMessage(user ? 'Du ar inloggad. Nu kan du trycka pa knappen Slutfor kop.' : 'Du ar inloggad, men kundinfo kunde inte hamtas.')
+      setTimeout(() => {
+        document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 0)
     } catch (err) {
       setAuthError('Inloggning misslyckades. Kontrollera e-post och losenord.')
     }
@@ -319,8 +327,9 @@ function App() {
               <p>{currentUser.firstName} {currentUser.lastName}</p>
               <p>{currentUser.email}</p>
               <p>{currentUser.phoneNumber}</p>
+              <p className="checkout-help">Du ar inloggad. Tryck pa knappen nedan for att skapa ordern och skicka mejlet.</p>
               <button type="button" onClick={buySelectedProduct} disabled={isBuying}>
-                {isBuying ? 'Skapar order...' : 'Bekrafta kop'}
+                {isBuying ? 'Skapar order...' : 'Slutfor kop och skicka order'}
               </button>
             </div>
           ) : (

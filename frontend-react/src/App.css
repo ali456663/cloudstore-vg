@@ -205,6 +205,14 @@ h1 {
   line-height: 1.55;
 }
 
+.checkout-help {
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff6cf;
+  color: #0a2a57 !important;
+  font-weight: 700;
+}
+
 .detail-price,
 .checkout-summary strong {
   color: #0f4c9c;
