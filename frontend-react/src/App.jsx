@@ -187,12 +187,10 @@ function App() {
       const data = await response.json()
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
-      const user = await loadCurrentUser(data.token, false)
+      await loadCurrentUser(data.token, false)
       setLoginForm(emptyLoginForm)
-      setAuthMessage(user ? 'Du ar inloggad. Nu kan du trycka pa knappen Slutfor kop.' : 'Du ar inloggad, men kundinfo kunde inte hamtas.')
-      setTimeout(() => {
-        document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 0)
+      setAuthMessage('Du ar inloggad. Vi skapar ordern nu.')
+      await buySelectedProduct(data.token)
     } catch (err) {
       setAuthError('Inloggning misslyckades. Kontrollera e-post och losenord.')
     }
@@ -205,7 +203,7 @@ function App() {
     setAuthMessage('Du ar utloggad.')
   }
 
-  async function buySelectedProduct() {
+  async function buySelectedProduct(authToken = token) {
     setOrderMessage('')
     setOrderError('')
 
@@ -213,7 +211,7 @@ function App() {
       return
     }
 
-    if (!token || !currentUser) {
+    if (!authToken) {
       setOrderError('Logga in eller registrera dig i kassan for att slutfora kopet.')
       return
     }
@@ -224,7 +222,7 @@ function App() {
       const response = await fetch(`${USER_ORDER_SERVICE_URL}/api/orders`, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -328,7 +326,7 @@ function App() {
               <p>{currentUser.email}</p>
               <p>{currentUser.phoneNumber}</p>
               <p className="checkout-help">Du ar inloggad. Tryck pa knappen nedan for att skapa ordern och skicka mejlet.</p>
-              <button type="button" onClick={buySelectedProduct} disabled={isBuying}>
+              <button type="button" onClick={() => buySelectedProduct()} disabled={isBuying}>
                 {isBuying ? 'Skapar order...' : 'Slutfor kop och skicka order'}
               </button>
             </div>
@@ -373,7 +371,9 @@ function App() {
                     Losenord
                     <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
                   </label>
-                  <button type="submit">Logga in</button>
+                  <button type="submit" disabled={isBuying}>
+                    {isBuying ? 'Skapar order...' : 'Logga in och slutfor kop'}
+                  </button>
                   <button className="secondary-button" type="button" onClick={() => setAuthMode('register')}>
                     Ny kund - registrera dig
                   </button>
