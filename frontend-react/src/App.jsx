@@ -28,6 +28,7 @@ function App() {
   const [selectedColor, setSelectedColor] = useState(colorOptions[0])
   const [selectedSize, setSelectedSize] = useState(sizeOptions[1])
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
+  const [authMode, setAuthMode] = useState('register')
   const [registerForm, setRegisterForm] = useState(emptyRegisterForm)
   const [loginForm, setLoginForm] = useState(emptyLoginForm)
   const [authMessage, setAuthMessage] = useState('')
@@ -94,6 +95,7 @@ function App() {
     setSelectedColor(colorOptions[0])
     setSelectedSize(sizeOptions[1])
     setIsCheckoutOpen(false)
+    setAuthMode('register')
     setOrderMessage('')
     setOrderError('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -102,8 +104,17 @@ function App() {
   function closeProduct() {
     setSelectedProduct(null)
     setIsCheckoutOpen(false)
+    setAuthMode('register')
     setOrderMessage('')
     setOrderError('')
+  }
+
+  function openCheckout() {
+    setIsCheckoutOpen(true)
+    setAuthMode('register')
+    setTimeout(() => {
+      document.getElementById('checkout')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 0)
   }
 
   function updateRegisterForm(event) {
@@ -139,8 +150,13 @@ function App() {
       }
 
       const data = await response.json()
-      setAuthMessage(`Konto skapat for ${data.firstName}. Logga in for att slutföra kopet.`)
+      setAuthMessage(`Konto skapat for ${data.firstName}. Logga in for att slutfora kopet.`)
+      setLoginForm({
+        email: registerForm.email,
+        password: '',
+      })
       setRegisterForm(emptyRegisterForm)
+      setAuthMode('login')
     } catch (err) {
       setAuthError('Registrering misslyckades. Testa annan e-post eller kontrollera falten.')
     }
@@ -168,7 +184,7 @@ function App() {
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
       setLoginForm(emptyLoginForm)
-      setAuthMessage('Du ar inloggad. Nu kan du slutföra kopet.')
+      setAuthMessage('Du ar inloggad. Nu kan du slutfora kopet.')
     } catch (err) {
       setAuthError('Inloggning misslyckades. Kontrollera e-post och losenord.')
     }
@@ -190,7 +206,7 @@ function App() {
     }
 
     if (!token || !currentUser) {
-      setOrderError('Logga in eller registrera dig i kassan for att slutföra kopet.')
+      setOrderError('Logga in eller registrera dig i kassan for att slutfora kopet.')
       return
     }
 
@@ -233,8 +249,8 @@ function App() {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">CloudStore</p>
-          <h1>Produkter</h1>
+          <p className="eyebrow">Super Mix</p>
+          <h1>Super Mix</h1>
         </div>
         {currentUser && (
           <div className="account-chip">
@@ -280,14 +296,14 @@ function App() {
                 </select>
               </div>
 
-              <button type="button" onClick={() => setIsCheckoutOpen(true)}>Ga till kassa</button>
+              <button type="button" onClick={openCheckout}>Ga till kassa</button>
             </div>
           </div>
         </section>
       )}
 
       {selectedProduct && isCheckoutOpen && (
-        <section className="checkout-panel" aria-label="Kassa">
+        <section className="checkout-panel" id="checkout" aria-label="Kassa">
           <div className="checkout-summary">
             <p className="eyebrow">Kassa</p>
             <h2>Slutfor kop</h2>
@@ -308,44 +324,52 @@ function App() {
               </button>
             </div>
           ) : (
-            <div className="auth-panel checkout-auth-panel">
-              <form className="auth-form" onSubmit={register}>
-                <h2>Registrera kund</h2>
-                <label>
-                  Namn
-                  <input name="firstName" value={registerForm.firstName} onChange={updateRegisterForm} required minLength={2} />
-                </label>
-                <label>
-                  Efternamn
-                  <input name="lastName" value={registerForm.lastName} onChange={updateRegisterForm} required minLength={2} />
-                </label>
-                <label>
-                  Gmail / e-post
-                  <input name="email" type="email" value={registerForm.email} onChange={updateRegisterForm} required />
-                </label>
-                <label>
-                  Telefonnummer
-                  <input name="phoneNumber" type="tel" value={registerForm.phoneNumber} onChange={updateRegisterForm} required minLength={7} />
-                </label>
-                <label>
-                  Losenord
-                  <input name="password" type="password" value={registerForm.password} onChange={updateRegisterForm} required minLength={8} />
-                </label>
-                <button type="submit">Skapa konto</button>
-              </form>
-
-              <form className="auth-form" onSubmit={login}>
-                <h2>Logga in</h2>
-                <label>
-                  Gmail / e-post
-                  <input name="email" type="email" value={loginForm.email} onChange={updateLoginForm} required />
-                </label>
-                <label>
-                  Losenord
-                  <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
-                </label>
-                <button type="submit">Logga in</button>
-              </form>
+            <div className="checkout-auth">
+              {authMode === 'register' ? (
+                <form className="auth-form checkout-form" onSubmit={register}>
+                  <h2>Registrera kund</h2>
+                  <label>
+                    Namn
+                    <input name="firstName" value={registerForm.firstName} onChange={updateRegisterForm} required minLength={2} />
+                  </label>
+                  <label>
+                    Efternamn
+                    <input name="lastName" value={registerForm.lastName} onChange={updateRegisterForm} required minLength={2} />
+                  </label>
+                  <label>
+                    Gmail / e-post
+                    <input name="email" type="email" value={registerForm.email} onChange={updateRegisterForm} required />
+                  </label>
+                  <label>
+                    Telefonnummer
+                    <input name="phoneNumber" type="tel" value={registerForm.phoneNumber} onChange={updateRegisterForm} required minLength={7} />
+                  </label>
+                  <label>
+                    Losenord
+                    <input name="password" type="password" value={registerForm.password} onChange={updateRegisterForm} required minLength={8} />
+                  </label>
+                  <button type="submit">Skapa konto</button>
+                  <button className="secondary-button" type="button" onClick={() => setAuthMode('login')}>
+                    Jag har redan konto - logga in
+                  </button>
+                </form>
+              ) : (
+                <form className="auth-form checkout-form" onSubmit={login}>
+                  <h2>Logga in</h2>
+                  <label>
+                    Gmail / e-post
+                    <input name="email" type="email" value={loginForm.email} onChange={updateLoginForm} required />
+                  </label>
+                  <label>
+                    Losenord
+                    <input name="password" type="password" value={loginForm.password} onChange={updateLoginForm} required />
+                  </label>
+                  <button type="submit">Logga in</button>
+                  <button className="secondary-button" type="button" onClick={() => setAuthMode('register')}>
+                    Ny kund - registrera dig
+                  </button>
+                </form>
+              )}
             </div>
           )}
         </section>
