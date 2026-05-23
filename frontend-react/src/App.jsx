@@ -84,6 +84,7 @@ function App() {
       if (shouldClearToken) {
         localStorage.removeItem('cloudstoreToken')
         setToken('')
+        setAuthMessage('')
       }
       setCurrentUser(null)
       return null
@@ -187,7 +188,7 @@ function App() {
       const data = await response.json()
       localStorage.setItem('cloudstoreToken', data.token)
       setToken(data.token)
-      await loadCurrentUser(data.token, false)
+      loadCurrentUser(data.token, false)
       setLoginForm(emptyLoginForm)
       setAuthMessage('Du ar inloggad. Tryck pa Slutfor kop vid produkten.')
       setTimeout(() => {
@@ -208,7 +209,8 @@ function App() {
   async function buySelectedProduct(authToken) {
     setOrderMessage('')
     setOrderError('')
-    const activeToken = authToken || token || localStorage.getItem('cloudstoreToken') || ''
+    const storedToken = localStorage.getItem('cloudstoreToken')
+    const activeToken = authToken || token || storedToken || ''
 
     if (!selectedProduct) {
       return
@@ -216,7 +218,8 @@ function App() {
 
     if (!activeToken) {
       setAuthMode('login')
-      setOrderError('Logga in eller registrera dig i kassan for att slutfora kopet.')
+      setAuthMessage('')
+      setOrderError('Du ar inte inloggad just nu. Logga in igen och tryck sedan pa Slutfor kop.')
       return
     }
 
@@ -243,13 +246,25 @@ function App() {
       })
 
       if (!response.ok) {
-        throw new Error('Could not create order')
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('cloudstoreToken')
+          setToken('')
+          setCurrentUser(null)
+          setAuthMode('login')
+          throw new Error('login-required')
+        }
+
+        throw new Error('order-failed')
       }
 
       const data = await response.json()
       setOrderMessage(`Din produkt har registrerats. Bestallning #${data.id} ar skapad och saljaren far mejl.`)
     } catch (err) {
-      setOrderError('Kopet misslyckades. Kontrollera att user-order-service kor pa port 8094.')
+      if (err.message === 'login-required') {
+        setOrderError('Din inloggning gick ut. Logga in igen och tryck sedan pa Slutfor kop.')
+      } else {
+        setOrderError('Kopet misslyckades. Kontrollera att user-order-service kor pa port 8094.')
+      }
     } finally {
       setIsBuying(false)
     }
