@@ -145,7 +145,8 @@ function App() {
       })
 
       if (!response.ok) {
-        throw new Error('Could not register user')
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || 'Registrering misslyckades.')
       }
 
       const data = await response.json()
@@ -157,7 +158,7 @@ function App() {
       setRegisterForm(emptyRegisterForm)
       setAuthMode('login')
     } catch (err) {
-      setAuthError('Registrering misslyckades. Testa annan e-post eller kontrollera falten.')
+      setAuthError(err.message || 'Registrering misslyckades. Testa annan e-post eller kontrollera falten.')
     }
   }
 
