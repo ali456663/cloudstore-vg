@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
-const PRODUCT_SERVICE_URL = 'http://localhost:8093'
-const USER_ORDER_SERVICE_URL = 'http://localhost:8094'
+const PRODUCT_SERVICE_URL = import.meta.env.VITE_PRODUCT_SERVICE_URL
+  || 'http://cloudstore-product-service-env.eba-izkz2b3g.eu-north-1.elasticbeanstalk.com'
+const USER_ORDER_SERVICE_URL = import.meta.env.VITE_USER_ORDER_SERVICE_URL
+  || 'http://cloudstore-user-order-service.eu-north-1.elasticbeanstalk.com'
 
 const colorOptions = ['Black', 'White', 'Blue', 'Green']
 const sizeOptions = ['S', 'M', 'L', 'XL']
