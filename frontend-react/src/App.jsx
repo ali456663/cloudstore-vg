@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 const PRODUCT_SERVICE_URL = import.meta.env.VITE_PRODUCT_SERVICE_URL
-  || '/product-api'
+  || 'https://ylid6gwgkj.execute-api.eu-north-1.amazonaws.com'
 const USER_ORDER_SERVICE_URL = import.meta.env.VITE_USER_ORDER_SERVICE_URL
-  || '/order-api'
+  || 'https://i7qpdb07d0.execute-api.eu-north-1.amazonaws.com'
 
 const colorOptions = ['Black', 'White', 'Blue', 'Green']
 const sizeOptions = ['S', 'M', 'L', 'XL']
